@@ -1,4 +1,4 @@
-## Shoplifting Detector V2
+## Shoplifting Detector
 
 This project is a **shoplifting detection system** built around a dual‑stream transformer model and YOLOv8 pose estimation. It exposes a **FastAPI** backend that accepts images, predicts the probability of shoplifting behaviour, and can return a visualized image with pose keypoints and prediction overlays.
 
