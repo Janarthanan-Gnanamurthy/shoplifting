@@ -1,0 +1,34 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment/config
+.env
+.env.*
+
+# Editors/OS
+.DS_Store
+.vscode/
+.idea/
+
+# Packaging/build outputs
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+nohup.out
+
+# Data and large artifacts
+weights/
+FYP-Shoplift-1/
+*.pt
+*.pth
