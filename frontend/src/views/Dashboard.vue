@@ -1,51 +1,93 @@
 <template>
   <div class="dashboard">
-    <div class="header">
-      <h1>Shoplifting Detection</h1>
-      <p>AI-powered behavioral analysis system</p>
+    <div class="summary-grid">
+      <SummaryCard
+        title="System Health"
+        :value="`${stats.system_health || 0}%`"
+        badge-text="HEALTHY"
+        badge-class="healthy"
+        :meta="`Uptime ${stats.uptime_percent || 0}%`"
+      />
+      
+      <SummaryCard
+        title="Total Detections"
+        :value="stats.total_detections || 0"
+        badge-text="ACTIVE"
+        badge-class="online"
+        :meta="`${stats.detections_24h || 0} in last 24h`"
+      />
+      
+      <SummaryCard
+        title="Critical Alerts"
+        :value="stats.critical_alerts || 0"
+        badge-text="NEW"
+        badge-class="critical"
+        :meta="`Warnings: ${stats.warnings || 0}`"
+      />
+      
+      <SummaryCard
+        title="Model Status"
+        :value="stats.models_loaded ? 'ONLINE' : 'OFFLINE'"
+        :badge-text="stats.models_loaded ? 'OPERATIONAL' : 'ERROR'"
+        :badge-class="stats.models_loaded ? 'healthy' : 'critical'"
+        meta="AI Detection System"
+      />
     </div>
 
-    <div class="features">
-      <div class="feature" @click="$router.push('/image')">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <path d="M21 15l-5-5L5 21"/>
-          </svg>
+    <div class="dashboard-grid">
+      <div class="grid-left">
+        <MonitoringSection />
+        
+        <div class="server-cards">
+          <div class="server-card">
+            <div class="server-header">
+              <h3>Detection System</h3>
+              <span class="server-badge healthy">HEALTHY</span>
+            </div>
+            <div class="server-stats">
+              <div class="stat-row">
+                <span class="stat-label">Accuracy</span>
+                <span class="stat-value">94.2%</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Processing</span>
+                <span class="stat-value">1.2K/min</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Response Time</span>
+                <span class="stat-value">0.8s</span>
+              </div>
+            </div>
+            <button class="server-action">Details</button>
+          </div>
+          
+          <div class="server-card">
+            <div class="server-header">
+              <h3>Video Processing</h3>
+              <span class="server-badge monitor">MONITOR</span>
+            </div>
+            <div class="server-stats">
+              <div class="stat-row">
+                <span class="stat-label">Queue</span>
+                <span class="stat-value">3 videos</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Avg Duration</span>
+                <span class="stat-value">45s</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Success Rate</span>
+                <span class="stat-value">98.5%</span>
+              </div>
+            </div>
+            <button class="server-action">Investigate</button>
+          </div>
         </div>
-        <h3>Image Analysis</h3>
-        <p>Detect suspicious behavior in images</p>
       </div>
-
-      <div class="feature" @click="$router.push('/visualize')">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 2v20M2 12h20"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-        </div>
-        <h3>Pose Visualization</h3>
-        <p>View pose keypoints and overlays</p>
-      </div>
-
-      <div class="feature" @click="$router.push('/video')">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-        </div>
-        <h3>Video Analysis</h3>
-        <p>Analyze video footage for activity</p>
-      </div>
-    </div>
-
-    <div class="status" v-if="healthStatus">
-      <div class="status-item">
-        <span class="status-label">System Status</span>
-        <span class="status-value" :class="{ error: !healthStatus.models_loaded }">
-          {{ healthStatus.models_loaded ? 'Operational' : 'Error' }}
-        </span>
+      
+      <div class="grid-right">
+        <QuickActions />
+        <RecentDetections />
       </div>
     </div>
   </div>
@@ -53,124 +95,160 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import SummaryCard from '../components/SummaryCard.vue'
+import MonitoringSection from '../components/MonitoringSection.vue'
+import QuickActions from '../components/QuickActions.vue'
+import RecentDetections from '../components/RecentDetections.vue'
 import api from '../services/api'
 
-const healthStatus = ref(null)
+const stats = ref({
+  system_health: 0,
+  models_loaded: false,
+  total_detections: 0,
+  detections_24h: 0,
+  critical_alerts: 0,
+  warnings: 0,
+  uptime_percent: 0
+})
 
 onMounted(async () => {
   try {
-    healthStatus.value = await api.healthCheck()
+    const data = await api.getDashboardStats()
+    stats.value = data
   } catch (error) {
-    console.error('Failed to fetch health status:', error)
+    console.error('Failed to load dashboard stats:', error)
   }
 })
 </script>
 
 <style scoped>
 .dashboard {
-  max-width: 900px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 4rem;
-}
-
-.header h1 {
-  font-size: 2.5rem;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.02em;
-}
-
-.header p {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-}
-
-.features {
+.summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
-.feature {
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.grid-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.grid-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.server-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.server-card {
   background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 2rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-.feature:hover {
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px var(--shadow);
-  transform: translateY(-2px);
-}
-
-.feature-icon {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 1.5rem;
-  color: var(--primary);
-}
-
-.feature-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.feature h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-}
-
-.feature p {
-  font-size: 0.9375rem;
-  color: var(--text-secondary);
-}
-
-.status {
-  background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.5rem;
 }
 
-.status-item {
+.server-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.server-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.server-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+.server-badge.healthy {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.server-badge.monitor {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.server-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.status-label {
-  font-size: 0.9375rem;
+.stat-label {
+  font-size: 0.875rem;
   color: var(--text-secondary);
 }
 
-.status-value {
+.stat-value {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--success);
+  color: var(--text);
 }
 
-.status-value.error {
-  color: var(--danger);
+.server-action {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.server-action:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary);
+}
+
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .header h1 {
-    font-size: 2rem;
+  .summary-grid {
+    grid-template-columns: 1fr;
   }
   
-  .features {
+  .server-cards {
     grid-template-columns: 1fr;
   }
 }

@@ -60,6 +60,30 @@ class ApiService {
     
     return response.json()
   }
+
+  async getDashboardStats() {
+    const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`)
+    if (!response.ok) throw new Error('Failed to fetch dashboard stats')
+    return response.json()
+  }
+
+  async getRecentDetections(limit = 10) {
+    const response = await fetch(`${API_BASE_URL}/api/dashboard/recent?limit=${limit}`)
+    if (!response.ok) throw new Error('Failed to fetch recent detections')
+    return response.json()
+  }
+
+  async getActivityData(hours = 24) {
+    const response = await fetch(`${API_BASE_URL}/api/dashboard/activity?hours=${hours}`)
+    if (!response.ok) throw new Error('Failed to fetch activity data')
+    return response.json()
+  }
+
+  async getAllDetections(skip = 0, limit = 50) {
+    const response = await fetch(`${API_BASE_URL}/api/dashboard/detections?skip=${skip}&limit=${limit}`)
+    if (!response.ok) throw new Error('Failed to fetch detections')
+    return response.json()
+  }
 }
 
 export default new ApiService()
